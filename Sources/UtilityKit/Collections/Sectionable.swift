@@ -25,3 +25,19 @@ public struct Sectionable<SectionID: Hashable, Element: Hashable>: Hashable {
     }
 }
 
+/*
+ 
+ Example Usage:
+ 
+ enum MySections: Hashable {
+     case main
+     case featured(title: String)
+     case gallery
+ }
+
+ // Create sections with different ID types
+ let mainSection = Sectionable(id: MySections.main, elements: [1, 2, 3])
+ let featuredSection = Sectionable(id: MySections.featured(title: "Highlights"), elements: ["A", "B"])
+ let gallerySection = Sectionable(id: MySections.gallery, elements: [URL(string: "...")!])
+ 
+ */
