@@ -10,7 +10,7 @@ public final class Store<State: Equatable & Sendable, Action: Sendable> {
         attributes: .concurrent
     )
     
-    var state: State {
+    public var state: State {
         get {
             queue.sync { _state }
         }
