@@ -13,7 +13,7 @@ public protocol NetworkMonitorProtocol {
 
 public final class NetworkMonitor: NetworkMonitorProtocol {
     
-    static let shared = NetworkMonitor()
+    public static let shared = NetworkMonitor()
 
     private let queue = DispatchQueue(label: "NetworkConnectivityMonitor")
     private let monitor: NWPathMonitor
