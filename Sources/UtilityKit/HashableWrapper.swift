@@ -1,13 +1,17 @@
 import Foundation
 
-struct HashableWrapper<T: Hashable>: Hashable {
-    let value: T
+public struct HashableWrapper<T: Hashable>: Hashable {
+    public let value: T
+    
+    public init(value: T) {
+        self.value = value
+    }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(value)
     }
 
-    static func == (lhs: HashableWrapper<T>, rhs: HashableWrapper<T>) -> Bool {
+    public static func == (lhs: HashableWrapper<T>, rhs: HashableWrapper<T>) -> Bool {
         return lhs.value == rhs.value
     }
 }
