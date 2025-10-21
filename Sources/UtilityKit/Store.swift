@@ -2,7 +2,7 @@ import Foundation
 
 @Observable
 public final class Store<State: Equatable & Sendable, Action: Sendable> {
-    private var _state: State
+    @Published private(set) var state: State
     let reducer: Reducer<State, Action>
     private let queue = DispatchQueue(
         label: "store.queue",
@@ -10,40 +10,25 @@ public final class Store<State: Equatable & Sendable, Action: Sendable> {
         attributes: .concurrent
     )
     
-    public var state: State {
-        get {
-            queue.sync { _state }
-        }
-        set {
-            queue.async(flags: .barrier) { [weak self] in
-                self?.updateState(newValue)
-            }
-        }
+    var statePublisher: Published<State>.Publisher {
+        $state
     }
     
     public init(initialState: State, reducer: Reducer<State, Action>) {
-        self._state = initialState
+        self.state = initialState
         self.reducer = reducer
     }
     
     private func updateState(_ newState: State) {
-        _state = newState
+        state = newState
     }
     
     public func send(_ action: Action) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
             
-            let oldState = self._state
-            self.reducer.reduce(&self._state, action, self.send)
-            
-            // Notify observers on main queue if state changed
-            if oldState != self._state {
-                DispatchQueue.main.async {
-                    // This triggers @Observable notifications
-                    self.state = self._state
-                }
-            }
+            let oldState = self.state
+            self.reducer.reduce(&self.state, action, self.send)
         }
     }
 }
