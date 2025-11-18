@@ -13,7 +13,7 @@ public class ListAdapter<
     ///   - indexPath: The index path for the supplementary view.
     ///   - section: The section data associated with the supplementary view.
     /// - Returns: A configured `UICollectionReusableView` or `nil`.
-    public typealias SupplementaryProvider = (UICollectionView, String, IndexPath, Sectionable<SectionID, Element>) -> (UICollectionReusableView, CGSize)?
+    public typealias SupplementaryProvider = (UICollectionView, String, IndexPath, Sectionable<SectionID, Element>) -> UICollectionReusableView?
     
     private let build: (UICollectionView, IndexPath, Element) -> UICollectionViewCell
     /// The current data source for the collection view, represented as an array of `Sectionable` items.
@@ -21,6 +21,7 @@ public class ListAdapter<
     private let sizing: ((Element, IndexPath) -> CGSize)?
     private let cv: UICollectionView
     private let supplementaryProvider: SupplementaryProvider?
+    private let headerSizeProvider: ((Int, Sectionable<SectionID, Element>) -> CGSize)?
     
     /// A closure to be executed when an item in the collection view is selected.
     public var didSelectItem: ((Element) -> Void)?
@@ -40,16 +41,19 @@ public class ListAdapter<
     ///   - builder: A closure that configures and returns a `UICollectionViewCell` for a given element and `IndexPath`.
     ///   - sizing: An optional closure that calculates the size for an item at a given `IndexPath`.
     ///   - supplementaryProvider: An optional closure that provides supplementary views (e.g., headers).
+    ///   - headerSizeProvider: An optional closure that provides the size for section headers.
     public init(
         bind cv: UICollectionView,
         builder: @escaping (UICollectionView, IndexPath, Element) -> UICollectionViewCell,
         sizing: ((Element, IndexPath) -> CGSize)?,
-        supplementaryProvider: SupplementaryProvider? = nil
+        supplementaryProvider: SupplementaryProvider? = nil,
+        headerSizeProvider: ((Int, Sectionable<SectionID, Element>) -> CGSize)? = nil
     ) {
         build = builder
         self.cv = cv
         self.sizing = sizing
         self.supplementaryProvider = supplementaryProvider
+        self.headerSizeProvider = headerSizeProvider
         self.ds = UICollectionViewDiffableDataSource<SectionID, Element>(
             collectionView: cv,
             cellProvider: builder
@@ -59,7 +63,7 @@ public class ListAdapter<
         cv.delegate = self
         ds.supplementaryViewProvider = { [unowned self] collectionView, kind, indexPath in
             let section = self.elements[indexPath.section]
-            return self.supplementaryProvider?(collectionView, kind, indexPath, section)?.0
+            return self.supplementaryProvider?(collectionView, kind, indexPath, section)
         }
     }
     
@@ -115,12 +119,7 @@ public class ListAdapter<
         layout collectionViewLayout: UICollectionViewLayout,
         referenceSizeForHeaderInSection section: Int
     ) -> CGSize {
-        return supplementaryProvider?(
-            collectionView,
-            UICollectionView.elementKindSectionHeader,
-            IndexPath(item: 0,section: section),
-            elements[section]
-        )?.1 ?? .zero
+        return headerSizeProvider?(section, elements[section]) ?? .zero
     }
 }
 
