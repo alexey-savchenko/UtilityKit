@@ -13,7 +13,7 @@ public class ListAdapter<
     ///   - indexPath: The index path for the supplementary view.
     ///   - section: The section data associated with the supplementary view.
     /// - Returns: A configured `UICollectionReusableView` or `nil`.
-    public typealias SupplementaryProvider = (UICollectionView, String, IndexPath, Sectionable<SectionID, Element>) -> UICollectionReusableView?
+    public typealias SupplementaryProvider = (UICollectionView, String, IndexPath, Sectionable<SectionID, Element>) -> (UICollectionReusableView, CGSize)?
     
     private let build: (UICollectionView, IndexPath, Element) -> UICollectionViewCell
     /// The current data source for the collection view, represented as an array of `Sectionable` items.
@@ -57,14 +57,9 @@ public class ListAdapter<
         super.init()
         
         cv.delegate = self
-        ds.supplementaryViewProvider = { [weak self] collectionView, kind, indexPath in
-            guard
-                let self,
-                indexPath.section < self.elements.count,
-                let provider = self.supplementaryProvider
-            else { return nil }
+        ds.supplementaryViewProvider = { [unowned self] collectionView, kind, indexPath in
             let section = self.elements[indexPath.section]
-            return provider(collectionView, kind, indexPath, section)
+            return self.supplementaryProvider?(collectionView, kind, indexPath, section)?.0
         }
     }
     
@@ -113,6 +108,19 @@ public class ListAdapter<
         insetForSectionAt section: Int
     ) -> UIEdgeInsets {
         return insetForSectionAt?(section) ?? .zero
+    }
+    
+    public func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        referenceSizeForHeaderInSection section: Int
+    ) -> CGSize {
+        return supplementaryProvider?(
+            collectionView,
+            UICollectionView.elementKindSectionHeader,
+            IndexPath(item: 0,section: section),
+            elements[section]
+        )?.1 ?? .zero
     }
 }
 
